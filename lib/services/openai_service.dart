@@ -1,6 +1,7 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'dart:io'; 
 
 class OpenAIService {
   static Future<Map<String, dynamic>> getPokedexEntry(String query) async {
@@ -133,5 +134,39 @@ class OpenAIService {
 
     // Sammensæt beskrivelsen fra startIndex og frem
     return lines.skip(startIndex).join('\n').trim();
+  }
+  static Future<void> savePokedexEntry(Map<String, dynamic> entry, File image) async {
+    final uri = Uri.parse('https://h4-jwt.onrender.com/api/Pokedex');
+
+    try {
+  var request = http.MultipartRequest('POST', uri)
+    ..fields['Name'] = entry['navn']
+    ..fields['Type'] = entry['type']
+    ..fields['Art'] = entry['art']
+    ..fields['Hp'] = entry['hp'].toString()
+    ..fields['Attack'] = entry['attack'].toString()
+    ..fields['Defense'] = entry['defense'].toString()
+    ..fields['Speed'] = entry['speed'].toString()
+    ..fields['Weight'] = entry['weight'].toInt().toString()
+    ..fields['Height'] = entry['height'].toInt().toString()
+    ..fields['Description'] = entry['description']
+    ..files.add(await http.MultipartFile.fromPath('ProfilePicture', image.path));
+
+  final response = await request.send();
+
+  if (response.statusCode == 200 || response.statusCode == 201) {
+    print('Pokémon entry saved successfully');
+    final responseBody = await response.stream.bytesToString();
+    print('Response body: $responseBody');
+  } else {
+    final responseBody = await response.stream.bytesToString();
+    print('Failed to save Pokémon entry: ${response.statusCode}');
+    print('Response body: $responseBody');
+    throw Exception('Failed to save Pokémon entry: ${response.statusCode}');
+  }
+} catch (e) {
+  print('Exception occurred while saving Pokémon entry: $e');
+  throw Exception('Exception occurred while saving Pokémon entry: $e');
+}
   }
 }

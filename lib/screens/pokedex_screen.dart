@@ -12,13 +12,13 @@ class PokedexScreen extends StatefulWidget {
 }
 
 class _PokedexScreenState extends State<PokedexScreen> {
-  Map<String, dynamic> _pokedexEntry = {};
+  File? _image;
   bool _isLoading = false;
   bool _showDetails = false;
-  File? _image;
+  Map<String, dynamic> _pokedexEntry = {};
 
   Future<void> _getImage() async {
-    final ImagePicker picker = ImagePicker();
+    final picker = ImagePicker();
     final XFile? image = await picker.pickImage(source: ImageSource.camera);
 
     if (image != null) {
@@ -26,7 +26,7 @@ class _PokedexScreenState extends State<PokedexScreen> {
       setState(() {
         _image = compressedFile;
       });
-      _analyzeImage();
+      await _analyzeImage();
     }
   }
 
@@ -58,6 +58,7 @@ class _PokedexScreenState extends State<PokedexScreen> {
       final imageBytes = await _image!.readAsBytes();
       final description = await OpenAIService.analyzeImage(imageBytes);
       await _getEntry(description);
+      await OpenAIService.savePokedexEntry(_pokedexEntry, _image!);
     } catch (e) {
       setState(() {
         _pokedexEntry = {
@@ -67,6 +68,7 @@ class _PokedexScreenState extends State<PokedexScreen> {
           'description': 'Fejl ved billedanalyse: $e',
         };
       });
+      print('Exception occurred: $e');
     } finally {
       setState(() {
         _isLoading = false;
@@ -94,6 +96,7 @@ class _PokedexScreenState extends State<PokedexScreen> {
           'description': 'Fejl ved hentning af data: $e',
         };
       });
+      print('Exception occurred while fetching entry: $e');
     } finally {
       setState(() {
         _isLoading = false;
