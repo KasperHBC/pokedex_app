@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:pokedex_app/screens/pokedex_screen.dart';
+import 'package:pokedex_app/screens/pokedex_list_screen.dart'; // Tilføj denne linje
 
 Future<void> main() async {
   await dotenv.load(fileName: ".env");
@@ -19,6 +20,9 @@ class PokedexApp extends StatelessWidget {
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       home: const PokedexScreen(),
+      routes: {
+        '/pokedexList': (context) => const PokedexListScreen(), // Tilføj denne linje
+      },
     );
   }
 }

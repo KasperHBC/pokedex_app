@@ -139,34 +139,46 @@ class OpenAIService {
     final uri = Uri.parse('https://h4-jwt.onrender.com/api/Pokedex');
 
     try {
-  var request = http.MultipartRequest('POST', uri)
-    ..fields['Name'] = entry['navn']
-    ..fields['Type'] = entry['type']
-    ..fields['Art'] = entry['art']
-    ..fields['Hp'] = entry['hp'].toString()
-    ..fields['Attack'] = entry['attack'].toString()
-    ..fields['Defense'] = entry['defense'].toString()
-    ..fields['Speed'] = entry['speed'].toString()
-    ..fields['Weight'] = entry['weight'].toInt().toString()
-    ..fields['Height'] = entry['height'].toInt().toString()
-    ..fields['Description'] = entry['description']
-    ..files.add(await http.MultipartFile.fromPath('ProfilePicture', image.path));
+      var request = http.MultipartRequest('POST', uri)
+        ..fields['Name'] = entry['navn']
+        ..fields['Type'] = entry['type']
+        ..fields['Art'] = entry['art']
+        ..fields['Hp'] = entry['hp'].toString()
+        ..fields['Attack'] = entry['attack'].toString()
+        ..fields['Defense'] = entry['defense'].toString()
+        ..fields['Speed'] = entry['speed'].toString()
+        ..fields['Weight'] = entry['weight'].toInt().toString()
+        ..fields['Height'] = entry['height'].toInt().toString()
+        ..fields['Description'] = entry['description']
+        ..files.add(await http.MultipartFile.fromPath('ProfilePicture', image.path));
 
-  final response = await request.send();
+      final response = await request.send();
 
-  if (response.statusCode == 200 || response.statusCode == 201) {
-    print('Pokémon entry saved successfully');
-    final responseBody = await response.stream.bytesToString();
-    print('Response body: $responseBody');
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print('Pokémon entry saved successfully');
+        final responseBody = await response.stream.bytesToString();
+        print('Response body: $responseBody');
+      } else {
+        final responseBody = await response.stream.bytesToString();
+        print('Failed to save Pokémon entry: ${response.statusCode}');
+        print('Response body: $responseBody');
+        throw Exception('Failed to save Pokémon entry: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Exception occurred while saving Pokémon entry: $e');
+      throw Exception('Exception occurred while saving Pokémon entry: $e');
+    }
+  }
+  static Future<List<Map<String, dynamic>>> fetchPokedexEntries() async {
+  final uri = Uri.parse('https://h4-jwt.onrender.com/api/Pokedex');
+
+  final response = await http.get(uri);
+
+  if (response.statusCode == 200) {
+    final List<dynamic> data = jsonDecode(response.body);
+    return data.cast<Map<String, dynamic>>();
   } else {
-    final responseBody = await response.stream.bytesToString();
-    print('Failed to save Pokémon entry: ${response.statusCode}');
-    print('Response body: $responseBody');
-    throw Exception('Failed to save Pokémon entry: ${response.statusCode}');
+    throw Exception('Failed to fetch Pokémon entries: ${response.statusCode}');
   }
-} catch (e) {
-  print('Exception occurred while saving Pokémon entry: $e');
-  throw Exception('Exception occurred while saving Pokémon entry: $e');
 }
-  }
 }

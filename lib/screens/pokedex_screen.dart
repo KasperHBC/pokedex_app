@@ -3,6 +3,7 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:pokedex_app/services/openai_service.dart';
+import 'package:pokedex_app/screens/pokedex_list_screen.dart';
 
 class PokedexScreen extends StatefulWidget {
   const PokedexScreen({super.key});
@@ -110,6 +111,19 @@ class _PokedexScreenState extends State<PokedexScreen> {
     });
   }
 
+  Future<void> _selectFromList() async {
+    final selectedEntry = await Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => const PokedexListScreen()),
+    );
+
+    if (selectedEntry != null) {
+      setState(() {
+        _pokedexEntry = selectedEntry;
+        _image = null; 
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -182,6 +196,17 @@ class _PokedexScreenState extends State<PokedexScreen> {
                         fit: BoxFit.cover,
                       ),
                     ),
+                  )
+                else if (_pokedexEntry['imageUrl'] != null)
+                  Center(
+                    child: ClipOval(
+                      child: Image.network(
+                        _pokedexEntry['imageUrl'],
+                        height: 200,
+                        width: 200,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
                   ),
                 const SizedBox(height: 16),
 
@@ -189,6 +214,13 @@ class _PokedexScreenState extends State<PokedexScreen> {
                 ElevatedButton(
                   onPressed: _isLoading ? null : _getImage,
                   child: const Text('Tag billede'),
+                ),
+                const SizedBox(height: 16),
+
+                // Knappen til at vælge fra liste
+                ElevatedButton(
+                  onPressed: _isLoading ? null : _selectFromList,
+                  child: const Text('Vælg fra liste'),
                 ),
                 const SizedBox(height: 16),
 
