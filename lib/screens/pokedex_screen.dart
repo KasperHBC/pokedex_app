@@ -48,62 +48,72 @@ class _PokedexScreenState extends State<PokedexScreen> {
     return File(result!.path);
   }
 
-  Future<void> _analyzeImage() async {
-    if (_image == null) return;
+ Future<void> _analyzeImage() async {
+  if (_image == null) return;
 
-    setState(() {
-      _isLoading = true;
-    });
+  setState(() {
+    _isLoading = true;
+  });
 
+  try {
+    final imageBytes = await _image!.readAsBytes();
+    final description = await OpenAIService.analyzeImage(imageBytes);
+    await _getEntry(description);
+    
+    // Prøv at gemme i databasen, men håndter fejl uden at påvirke UI
     try {
-      final imageBytes = await _image!.readAsBytes();
-      final description = await OpenAIService.analyzeImage(imageBytes);
-      await _getEntry(description);
       await OpenAIService.savePokedexEntry(_pokedexEntry, _image!);
     } catch (e) {
-      setState(() {
-        _pokedexEntry = {
-          'navn': 'Fejl',
-          'art': 'Ukendt',
-          'type': 'Fejl',
-          'description': 'Fejl ved billedanalyse: $e',
-        };
-      });
-      print('Exception occurred: $e');
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      print('Failed to save Pokémon entry to database: $e');
     }
+  } catch (e) {
+    setState(() {
+      _pokedexEntry = {
+        'navn': 'Fejl',
+        'art': 'Ukendt',
+        'type': 'Fejl',
+        'description': 'Fejl ved billedanalyse: $e',
+      };
+    });
+    print('Exception occurred: $e');
+  } finally {
+    setState(() {
+      _isLoading = false;
+    });
   }
+}
 
   Future<void> _getEntry(String imageDescription) async {
-    setState(() {
-      _isLoading = true;
-    });
+  setState(() {
+    _isLoading = true;
+  });
 
-    try {
-      final result = await OpenAIService.getPokedexEntry(imageDescription);
-      setState(() {
-        _pokedexEntry = result;
-        _pokedexEntry['description'] = imageDescription;
-      });
-    } catch (e) {
-      setState(() {
-        _pokedexEntry = {
-          'navn': 'Fejl',
-          'art': 'Ukendt',
-          'type': 'Fejl',
-          'description': 'Fejl ved hentning af data: $e',
-        };
-      });
-      print('Exception occurred while fetching entry: $e');
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
+  try {
+    final result = await OpenAIService.getPokedexEntry(imageDescription);
+    setState(() {
+      _pokedexEntry = result;
+      _pokedexEntry['description'] = imageDescription;
+      // Kontroller om 'name' findes og sæt 'navn' til dens værdi hvis den gør
+      if (_pokedexEntry.containsKey('name')) {
+        _pokedexEntry['navn'] = _pokedexEntry['name'];
+      }
+    });
+  } catch (e) {
+    setState(() {
+      _pokedexEntry = {
+        'navn': 'Fejl',
+        'art': 'Ukendt',
+        'type': 'Fejl',
+        'description': 'Fejl ved hentning af data: $e',
+      };
+    });
+    print('Exception occurred while fetching entry: $e');
+  } finally {
+    setState(() {
+      _isLoading = false;
+    });
   }
+}
 
   void _toggleDetails() {
     setState(() {
@@ -125,128 +135,131 @@ class _PokedexScreenState extends State<PokedexScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('AI Pokedex'),
-      ),
-      body: Stack(
-        children: [
-          // Baggrundsfarve baseret på Pokémon-type
-          Container(
-            color: _getBackgroundColor(_pokedexEntry['type']),
-            height: MediaQuery.of(context).size.height * 0.4,
-          ),
-          SafeArea(
-            child: Column(
-              children: [
-                // Top sektion med navn, type og nummer
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back),
-                        color: Colors.white,
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _pokedexEntry['navn'] ?? 'Pokémon',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                            ),
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(
+      title: const Text('AI Pokedex'),
+    ),
+    body: Stack(
+      children: [
+        // Baggrundsfarve baseret på Pokémon-type
+        Container(
+          color: _getBackgroundColor(_pokedexEntry['type']),
+          height: MediaQuery.of(context).size.height * 0.4,
+        ),
+        SafeArea(
+          child: Column(
+            children: [
+              // Top sektion med navn, type og nummer
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back),
+                      color: Colors.white,
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _pokedexEntry['navn'] ?? 'Pokémon',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
                           ),
-                          Chip(
-                            label: Text(
-                              _pokedexEntry['type'] ?? 'Type',
-                              style: const TextStyle(color: Colors.white),
-                            ),
-                            backgroundColor: Colors.black26,
-                          ),
-                        ],
-                      ),
-                      Text(
-                        '#${_pokedexEntry['id'] ?? '000'}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Rundt Pokémon billede
-                if (_image != null)
-                  Center(
-                    child: ClipOval(
-                      child: Image.file(
-                        _image!,
-                        height: 200,
-                        width: 200,
-                        fit: BoxFit.cover,
+                        Chip(
+                          label: Text(
+                            _pokedexEntry['type'] ?? 'Type',
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                          backgroundColor: Colors.black26,
+                        ),
+                      ],
+                    ),
+                    Text(
+                      '#${_pokedexEntry['id'] ?? '000'}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  )
-                else if (_pokedexEntry['imageUrl'] != null)
-                  Center(
-                    child: ClipOval(
-                      child: Image.network(
-                        _pokedexEntry['imageUrl'],
-                        height: 200,
-                        width: 200,
-                        fit: BoxFit.cover,
-                      ),
+                  ],
+                ),
+              ),
+
+              // Rundt Pokémon billede
+              if (_image != null)
+                Center(
+                  child: ClipOval(
+                    child: Image.file(
+                      _image!,
+                      height: 200,
+                      width: 200,
+                      fit: BoxFit.cover,
                     ),
                   ),
-                const SizedBox(height: 16),
-
-                // Knappen til at tage et billede
-                ElevatedButton(
-                  onPressed: _isLoading ? null : _getImage,
-                  child: const Text('Tag billede'),
-                ),
-                const SizedBox(height: 16),
-
-                // Knappen til at vælge fra liste
-                ElevatedButton(
-                  onPressed: _isLoading ? null : _selectFromList,
-                  child: const Text('Vælg fra liste'),
-                ),
-                const SizedBox(height: 16),
-
-                if (_isLoading) const CircularProgressIndicator(),
-                const SizedBox(height: 16),
-
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: _showDetails
-                        ? PokedexDescription(description: _pokedexEntry['description'] ?? 'Ingen beskrivelse tilgængelig')
-                        : PokedexStats(entry: _pokedexEntry),
+                )
+              else if (_pokedexEntry['imageUrl'] != null)
+                Center(
+                  child: ClipOval(
+                    child: Image.network(
+                      _pokedexEntry['imageUrl'],
+                      height: 200,
+                      width: 200,
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 16),
+              const SizedBox(height: 16),
 
-                ElevatedButton(
-                  onPressed: _toggleDetails,
-                  child: Text(_showDetails ? 'Vis Basis Information' : 'Vis Beskrivelse'),
+              // Knapperne til at tage et billede og vælge fra liste ved siden af hinanden
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: _isLoading ? null : _getImage,
+                    child: const Text('Tag billede'),
+                  ),
+                  const SizedBox(width: 16),
+                  ElevatedButton(
+                    onPressed: _isLoading ? null : _selectFromList,
+                    child: const Text('Vælg fra liste'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              if (_isLoading) const CircularProgressIndicator(),
+              const SizedBox(height: 16),
+
+              Expanded(
+                child: SingleChildScrollView(
+                  child: _showDetails
+                      ? PokedexDescription(description: _pokedexEntry['description'] ?? 'Ingen beskrivelse tilgængelig')
+                      : PokedexStats(entry: _pokedexEntry),
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 16),
+
+              ElevatedButton(
+                onPressed: _toggleDetails,
+                child: Text(_showDetails ? 'Vis Basis Information' : 'Vis Beskrivelse'),
+              ),
+            ],
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
+}
 
   // Metode til at bestemme baggrundsfarve baseret på Pokémon-type
   Color _getBackgroundColor(String? type) {
@@ -316,8 +329,8 @@ class PokedexStats extends StatelessWidget {
             _buildStatRow('Angreb', entry['attack'], 200),
             _buildStatRow('Forsvar', entry['defense'], 200),
             _buildStatRow('Hastighed', entry['speed'], 200),
-            _buildStatRow('Vægt', entry['weight'], 1000), // Vægt antager en max værdi på 1000 kg
-            _buildStatRow('Højde', entry['height'], 10),  // Højde antager en max værdi på 10 meter
+            _buildStatRow('Vægt (kg)', entry['weight'], 1000), // Vægt antager en max værdi på 1000 kg
+            _buildStatRow('Højde (cm)', entry['height'], 1000),  // Højde antager en max værdi på 10 meter
           ],
         ),
       ),

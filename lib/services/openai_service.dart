@@ -13,7 +13,7 @@ class OpenAIService {
       "messages": [
         {
           "role": "system",
-          "content": "Du er en Pokedex designet til at beskrive fiktive Pokémon. Givet en beskrivelse af et objekt, bør du outputte et JSON-objekt med følgende felter: navn (et opfundet Pokémon navn), art, weight, height, hp, attack, defense, speed, og type (skal være 1 pokemoner typer). Navnet skal være fantasifuldt og passe til beskrivelsen."
+          "content": "Du er en Pokedex designet til at beskrive fiktive Pokémon. Givet en beskrivelse af et objekt, bør du outputte et JSON-objekt med følgende felter: navn (et opfundet Pokémon navn), art(hvilken slags rigtig ting den minder om, eg. plante pokemen, kop pokemon, osv., weight(mellem 5-1000 kg), height(mellem 10-1000 centimeter), hp(mellem 50-255), attack(mellem 10-200), defense(mellem 10-200), speed(mellem 10-200), og type (skal være 1 pokemon typer på engelsk). Navnet skal være fantasifuldt og passe til beskrivelsen."
         },
         {
           "role": "user",
@@ -75,7 +75,7 @@ class OpenAIService {
           "content": [
             {
               "type": "text",
-              "text": "Beskriv dette billede som en Pokémon, med et fantasifuldt navn og detaljer om dets art, type, og andre relevante egenskaber som passer til det, der ses på billedet."
+              "text": "Beskriv dette billede som en Pokémon. Du skal beskrive følgende om den: Kort om den, Udseende, Biologi, Levested, angreb, udviklinger (og hvordan den udvikler sig)"
             },
             {
               "type": "image_url",
