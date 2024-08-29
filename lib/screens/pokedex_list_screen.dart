@@ -39,7 +39,7 @@ class _PokedexListScreenState extends State<PokedexListScreen> {
               itemBuilder: (context, index) {
                 final entry = pokedexEntries[index];
                 return ListTile(
-                  leading: Image.network(entry['imageUrl']), // Antager at imageUrl er en del af entry
+                  leading: Image.network(entry['imageUrl']), 
                   title: Text(entry['name']),
                   subtitle: Text(entry['type']),
                   onTap: () {
