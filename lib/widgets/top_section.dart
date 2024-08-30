@@ -26,7 +26,7 @@ class TopSection extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                pokedexEntry['navn'] ?? 'Pokémon',
+                pokedexEntry['navn'] ?? 'MercanMon',
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 28,

@@ -21,7 +21,7 @@ class _PokedexListScreenState extends State<PokedexListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Pokémon Liste'),
+        title: const Text('MercanMon Liste'),
       ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: _pokedexEntries,
@@ -31,7 +31,7 @@ class _PokedexListScreenState extends State<PokedexListScreen> {
           } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('Ingen Pokémon fundet.'));
+            return const Center(child: Text('Ingen MercanMon fundet.'));
           } else {
             final pokedexEntries = snapshot.data!;
             return ListView.builder(

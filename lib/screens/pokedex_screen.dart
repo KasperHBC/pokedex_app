@@ -67,7 +67,7 @@ class _PokedexScreenState extends State<PokedexScreen> {
       try {
         await OpenAIService.savePokedexEntry(_pokedexEntry, _image!);
       } catch (e) {
-        print('Failed to save Pokémon entry to database: $e');
+        print('Failed to save MercanMon entry to database: $e');
       }
     } catch (e) {
       setState(() {
@@ -148,7 +148,7 @@ class _PokedexScreenState extends State<PokedexScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('AI Pokedex'),
+        title: const Text('AI MercanDex'),
       ),
       body: Stack(
         children: [
